@@ -1,377 +1,87 @@
-# Configuration Guide
+# Configuration reference
 
-This guide explains how to configure the Document Assistant for different environments.
+[src/config.py](../src/config.py) calls `load_dotenv()` when imported. Existing process environment variables take precedence over values loaded from `.env`.
 
-## Environment Variables
+## Environment variables
 
-The Document Assistant uses a `.env` file for configuration. Copy `.env.example` to `.env` and customize it for your needs.
+| Variable | Default in code | Behavior |
+| --- | --- | --- |
+| `API_PROVIDER` | `vocareum` | Lowercased selector: `openai` or `vocareum`. |
+| `OPENAI_API_KEY` | None | Required by `get_openai_client()`; absent/empty values raise `ValueError`. |
+| `OPENAI_BASE_URL` | `https://openai.vocareum.com/v1` in the Vocareum branch | Endpoint for Vocareum or an invalid provider. |
+| `DEFAULT_MODEL` | `gpt-4` | Model passed by `get_default_llm()`. |
+| `DEFAULT_TEMPERATURE` | `0` | Parsed as a float; invalid text raises `ValueError`. |
 
-```bash
-cp .env.example .env
-```
+The model default is application configuration, not a promise of provider access. Select a supported model that accepts this application's tool-calling and structured-output requests.
 
-## Configuration Options
+## Direct OpenAI
 
-### API Provider Selection
-
-The most important configuration is choosing which API to use:
-
-```bash
-# Choose which API to use: 'openai' or 'vocareum'
-API_PROVIDER=vocareum
-```
-
-#### Option 1: OpenAI API (Direct)
-
-Use this option if you have your own OpenAI API key from [platform.openai.com](https://platform.openai.com/api-keys).
-
-**Configuration**:
-```bash
-# API Provider
+```dotenv
 API_PROVIDER=openai
-
-# Your OpenAI API key
-OPENAI_API_KEY=sk-proj-...your-actual-key...
-
-# Leave OPENAI_BASE_URL empty or comment it out
-# OPENAI_BASE_URL=
+OPENAI_API_KEY=your-api-key
+DEFAULT_MODEL=gpt-4
+DEFAULT_TEMPERATURE=0
 ```
 
-**When to use**:
-- You have your own OpenAI API account
-- You want to use the latest OpenAI models directly
-- You're developing or testing outside of Vocareum environment
-- You need full control over API usage and billing
+Remove `OPENAI_BASE_URL` from the template and unset any exported value. The application does not explicitly pass an endpoint in its `openai` branch, but the underlying client can also read environment configuration.
 
-**Advantages**:
-- Access to latest models and features
-- No course budget limitations
-- Full API capabilities
-- Better for production deployments
+## Vocareum
 
-**Requirements**:
-- Valid OpenAI account with payment method
-- API key from https://platform.openai.com/api-keys
-
----
-
-#### Option 2: Vocareum Endpoint (Course Environment)
-
-Use this option if you're working in a course or educational environment that provides API access through Vocareum.
-
-**Configuration**:
-```bash
-# API Provider
+```dotenv
 API_PROVIDER=vocareum
-
-# API key provided by your course/instructor
-OPENAI_API_KEY=your_vocareum_api_key
-
-# Vocareum endpoint
-OPENAI_BASE_URL=https://openai.vocareum.com/v1
-```
-
-**When to use**:
-- You're in a course using Vocareum
-- You have a course-provided API key
-- You want to use the course API budget
-- You're following course guidelines
-
-**Advantages**:
-- Free for course students (within budget)
-- Pre-configured for educational environment
-- No need for personal OpenAI account
-
-**Limitations**:
-- Subject to course budget limits
-- May have restricted model access
-- Potential rate limiting
-
----
-
-### Model Configuration
-
-Configure which model to use and its behavior:
-
-```bash
-# Model Selection
-DEFAULT_MODEL=gpt-4
-
-# Temperature (0 = deterministic, 1 = creative)
-DEFAULT_TEMPERATURE=0
-```
-
-#### Available Models
-
-**GPT-4 (Recommended)**:
-```bash
-DEFAULT_MODEL=gpt-4
-```
-- Best for complex reasoning and structured outputs
-- Required for tool calling in this project
-- More expensive but more accurate
-
-**GPT-4-Turbo** (if available):
-```bash
-DEFAULT_MODEL=gpt-4-turbo-preview
-```
-- Faster than GPT-4
-- Lower cost
-- Good for most use cases
-
-**GPT-3.5-Turbo** (Not recommended for this project):
-```bash
-DEFAULT_MODEL=gpt-3.5-turbo
-```
-- Cheaper and faster
-- May have issues with complex tool calling
-- Not recommended for production use with this project
-
-#### Temperature Settings
-
-Temperature controls response randomness:
-
-**Deterministic (0)**:
-```bash
-DEFAULT_TEMPERATURE=0
-```
-- Consistent, repeatable responses
-- Best for Q&A and factual information
-- Recommended for this project
-
-**Balanced (0.3-0.7)**:
-```bash
-DEFAULT_TEMPERATURE=0.5
-```
-- Mix of consistency and creativity
-- Good for summarization tasks
-
-**Creative (0.8-1.0)**:
-```bash
-DEFAULT_TEMPERATURE=0.9
-```
-- More varied responses
-- Better for creative writing
-- Not recommended for factual Q&A
-
----
-
-## Configuration Examples
-
-### Example 1: Personal Development (OpenAI Direct)
-
-```bash
-# .env file
-API_PROVIDER=openai
-OPENAI_API_KEY=sk-proj-abc123...
-# OPENAI_BASE_URL is not needed
-DEFAULT_MODEL=gpt-4
-DEFAULT_TEMPERATURE=0
-```
-
-### Example 2: Course Environment (Vocareum)
-
-```bash
-# .env file
-API_PROVIDER=vocareum
-OPENAI_API_KEY=course_provided_key_here
+OPENAI_API_KEY=your-course-api-key
 OPENAI_BASE_URL=https://openai.vocareum.com/v1
 DEFAULT_MODEL=gpt-4
 DEFAULT_TEMPERATURE=0
 ```
 
-### Example 3: Testing with GPT-4 Turbo
+Use the key, endpoint, model access, and budget supplied by your course. See [Vocareum setup](VOCAREUM_SETUP.md).
 
-```bash
-# .env file
-API_PROVIDER=openai
-OPENAI_API_KEY=sk-proj-abc123...
-DEFAULT_MODEL=gpt-4-turbo-preview
-DEFAULT_TEMPERATURE=0
-```
+## Selection and overrides
 
----
+1. An explicit non-`None` `base_url` argument bypasses provider selection.
+2. Otherwise, `API_PROVIDER=openai` constructs the client without an explicit endpoint.
+3. `API_PROVIDER=vocareum` reads `OPENAI_BASE_URL`, falling back to the Vocareum URL.
+4. An unknown provider prints a warning and follows the Vocareum branch.
 
-## Switching Between Environments
+Provider names are lowercased but whitespace is not stripped. An explicitly empty base URL is different from an absent variable and results in construction without an explicit endpoint.
 
-You can easily switch between OpenAI and Vocareum by changing only the `API_PROVIDER` variable:
-
-**For testing with your own key**:
-```bash
-API_PROVIDER=openai
-```
-
-**For course work**:
-```bash
-API_PROVIDER=vocareum
-```
-
-The code automatically handles the rest!
-
----
-
-## Verifying Configuration
-
-After setting up your `.env` file, verify the configuration:
-
-```bash
-# Run environment check
-python tests/check_environment.py
-```
-
-This will verify:
-- `.env` file exists
-- `OPENAI_API_KEY` is set
-- API provider is valid
-- LLM can be initialized
-- All dependencies are installed
-
----
-
-## Troubleshooting
-
-### "OPENAI_API_KEY not found"
-
-**Problem**: The API key is missing or `.env` file doesn't exist.
-
-**Solution**:
-1. Copy `.env.example` to `.env`
-2. Add your API key
-3. Make sure the file is named exactly `.env` (not `.env.txt`)
-
-### "Course budget exceeded"
-
-**Problem**: Vocareum API budget has been used up.
-
-**Solution**:
-1. Contact your course instructor for more budget
-2. OR switch to your own OpenAI API key:
-   ```bash
-   API_PROVIDER=openai
-   OPENAI_API_KEY=your_personal_key
-   ```
-
-### "Invalid API key"
-
-**Problem**: The API key is incorrect or expired.
-
-**Solution**:
-1. Verify the key is correct (no extra spaces)
-2. For OpenAI: Generate a new key at https://platform.openai.com/api-keys
-3. For Vocareum: Get the correct key from your course instructor
-
-### "Model not found" or "Model not available"
-
-**Problem**: The specified model isn't available in your environment.
-
-**Solution**:
-1. Try a different model (e.g., `gpt-4` instead of `gpt-4-turbo`)
-2. Check if your API key has access to that model
-3. For Vocareum: Use the models specified by your course
-
----
-
-## Security Best Practices
-
-### Never Commit API Keys
-
-**IMPORTANT**: Never commit your `.env` file to git!
-
-The `.gitignore` file already includes `.env`, but double-check:
-
-```bash
-# Check that .env is ignored
-git status
-# Should NOT show .env file
-```
-
-### Keep Keys Secret
-
-- Don't share API keys in chat, email, or screenshots
-- Don't hardcode keys in source code
-- Rotate keys regularly
-- Use separate keys for development and production
-
-### Environment-Specific Keys
-
-Consider using different API keys for:
-- **Development**: Testing and debugging
-- **Production**: Live deployments
-- **CI/CD**: Automated testing (with limited budget)
-
----
-
-## Advanced Configuration
-
-### Custom Base URL
-
-If you're using a custom OpenAI-compatible endpoint:
-
-```bash
-API_PROVIDER=openai  # Still use 'openai' provider
-OPENAI_API_KEY=your_key
-OPENAI_BASE_URL=https://your-custom-endpoint.com/v1
-```
-
-### Environment-Specific Settings
-
-You can have multiple `.env` files:
-
-```bash
-.env              # Default (not in git)
-.env.development  # Development settings
-.env.production   # Production settings
-.env.example      # Example template (in git)
-```
-
-Load specific environment:
-```python
-from dotenv import load_dotenv
-load_dotenv('.env.production')
-```
-
----
-
-## Configuration Validation
-
-The system validates configuration at startup:
+## Python configuration
 
 ```python
-from src.config import get_default_llm
+from src.config import get_default_llm, get_openai_client
 
-try:
-    llm = get_default_llm()
-    print("✅ Configuration valid")
-except ValueError as e:
-    print(f"❌ Configuration error: {e}")
+# Reads DEFAULT_MODEL and DEFAULT_TEMPERATURE.
+llm = get_default_llm()
+
+# Explicit settings.
+custom_llm = get_openai_client(
+    model="your-supported-model",
+    temperature=0,
+    base_url="https://your-compatible-endpoint.example/v1",
+)
 ```
 
-Common validation errors:
-- Missing `OPENAI_API_KEY`
-- Invalid `API_PROVIDER` (must be 'openai' or 'vocareum')
-- Invalid model name
-- Network connectivity issues
+Calling `get_openai_client()` directly uses its argument defaults, `model="gpt-4"` and `temperature=0`, rather than the `DEFAULT_*` variables.
 
----
+The assistant accepts an injected LLM. The configured adapter is `ChatOpenAI`; the Anthropic package in requirements does not implement an Anthropic provider option.
 
-## References
+## Paths
 
-- **OpenAI API Documentation**: https://platform.openai.com/docs/api-reference
-- **LangChain Documentation**: https://python.langchain.com/docs/integrations/llms/openai
-- **Environment Variables (python-dotenv)**: https://pypi.org/project/python-dotenv/
+| Setting | Configuration |
+| --- | --- |
+| Document path | First CLI argument, `/load <path>`, or Python constructor/method. |
+| Session directory | `session_dir` constructor argument, default `sessions`; the CLI uses the default. |
+| Relative paths | Resolved from the process working directory. |
 
----
+The session directory is created automatically, but missing parent directories are not created recursively. There are no application environment settings for retrieval depth, session paths, or checkpoint storage.
 
-## Need Help?
+## Local configuration check
 
-If you're having configuration issues:
+```bash
+python -c "from src.config import get_default_llm; get_default_llm(); print('Client constructed; no API request sent.')"
+```
 
-1. Run the environment checker: `python tests/check_environment.py`
-2. Check this guide for your specific error
-3. Review the `.env.example` file for reference
-4. Contact your course instructor (for Vocareum issues)
-5. Check OpenAI status (for API issues): https://status.openai.com
+This checks local construction, not authentication. Restart the process or notebook kernel after changing configuration.
 
----
-
-**Last Updated**: 2025-11-03
+Keep credentials in `.env` or the process environment. The tracked `.env.example` contains placeholders.

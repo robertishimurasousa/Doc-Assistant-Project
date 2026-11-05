@@ -1,5 +1,7 @@
 # Notebook Fixes Summary
 
+> Historical record: this document describes earlier implementation or course-review work. Examples, line references, and completion claims may no longer match the code. Use the [documentation index](README.md) for current guidance.
+
 ## Issues Fixed
 
 ### 1. Session Directory Duplication

@@ -1,343 +1,87 @@
-# Quick Start Guide - Document Assistant
+# Quick start
 
-## Installation
+This tutorial takes you from a checkout to a document question in the terminal.
 
-```bash
-# Install dependencies
-pip install -r requirements.txt
-```
+## 1. Prepare Python
 
-## Configuration
+You need Git, Python with `venv` and `pip`, and network access for installation. Model-backed queries also require a provider key and a model supporting tool calling and structured output.
 
-Create a `.env` file in the project root:
+The repository does not declare a minimum Python version or lock dependencies. Installation and offline checks were verified on Python 3.14.10 on macOS on November 5, 2026. This is a tested environment, not a minimum-version declaration. Use `python3.14` below if your `python3` points to an older system interpreter.
 
 ```bash
-# For OpenAI
-OPENAI_API_KEY=your_openai_api_key_here
-
-# OR for Anthropic Claude
-ANTHROPIC_API_KEY=your_anthropic_api_key_here
+git clone https://github.com/robertishimurasousa/Doc-Assistant-Project.git
+cd Doc-Assistant-Project
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python -m pip check
 ```
 
-## Basic Usage
+On Windows PowerShell, activate with `.venv\Scripts\Activate.ps1` instead.
 
-### 1. Using with OpenAI
+Run the remaining commands from the repository root. This project runs from source; `pyproject.toml` configures tests rather than package builds.
 
-```python
-from src.assistant import DocumentAssistant
-from langchain_openai import ChatOpenAI
-
-# Initialize LLM
-llm = ChatOpenAI(
-    model="gpt-4",
-    temperature=0
-)
-
-# Create assistant
-assistant = DocumentAssistant(
-    document_path="./documents",  # Path to your documents
-    llm=llm
-)
-
-# Load documents
-assistant.load_documents()
-
-# Ask questions
-response = assistant.query("What is the main topic of the documents?")
-print(response)
-```
-
-### 2. Using with Anthropic Claude
-
-```python
-from src.assistant import DocumentAssistant
-from langchain_anthropic import ChatAnthropic
-
-# Initialize LLM
-llm = ChatAnthropic(
-    model="claude-3-5-sonnet-20241022",
-    temperature=0
-)
-
-# Create assistant
-assistant = DocumentAssistant(
-    document_path="./documents",
-    llm=llm
-)
-
-# Load documents
-assistant.load_documents()
-
-# Ask questions
-response = assistant.query("Summarize the key findings")
-print(response)
-```
-
-### 3. Command-Line Interface
+## 2. Configure a provider
 
 ```bash
-# Run the interactive CLI
+cp .env.example .env
+```
+
+For direct OpenAI access, replace the template settings with:
+
+```dotenv
+API_PROVIDER=openai
+OPENAI_API_KEY=your-api-key
+DEFAULT_MODEL=gpt-4
+DEFAULT_TEMPERATURE=0
+```
+
+Remove `OPENAI_BASE_URL` from `.env` and unset any exported value for direct OpenAI access. For a course key, follow [Vocareum setup](VOCAREUM_SETUP.md). See [configuration](CONFIGURATION.md) for precedence and custom endpoints.
+
+Creating the client does not verify credentials, model availability, or provider budget.
+
+## 3. Load a sample document
+
+```bash
+python main.py data/sales_report_q1_2024.txt
+```
+
+The terminal should report one loaded document and start a session. Enter:
+
+```text
+What does the Q1 sales report say about monthly revenue?
+Summarize the Q1 sales report.
+Calculate 50000 + 60000 + 70000.
+/stats
+/quit
+```
+
+The standalone arithmetic example evaluates to `180000`. Natural-language responses vary, and the calculation route does not guarantee a calculator call. Inspect tool logs when evaluating tool behavior.
+
+Each query attempts to save its transcript in `sessions/`. Workflow errors may be returned as answer strings, so a printed response alone does not prove success.
+
+## 4. Load your documents
+
+Create a `documents/` directory and add UTF-8 text files, then run:
+
+```bash
 python main.py ./documents
-
-# Or run without pre-loading documents
-python main.py
 ```
 
-## Example Queries
+Directory scans support lowercase `.txt`, `.md`, `.json`, and `.csv` extensions and include nested directories. JSON and CSV files are read as text, without record parsing.
 
-### Q&A Intent
-```python
-# The system will use the Q&A agent
-assistant.query("What is mentioned about sales in Q1?")
-assistant.query("Who are the key stakeholders?")
-assistant.query("What are the main conclusions?")
+Within a running session:
+
+```text
+/load ./documents
+/stats
 ```
 
-### Summarization Intent
-```python
-# The system will use the Summarization agent
-assistant.query("Summarize all the documents")
-assistant.query("Give me an overview of the report")
-assistant.query("Provide a summary of key points")
-```
+Loading appends documents and can create duplicates. Start a fresh application or call `assistant.retriever.clear_documents()` in Python to replace the collection.
 
-### Calculation Intent
-```python
-# The system will use the Calculation agent with calculator tool
-assistant.query("Calculate the total revenue from Q1 and Q2")
-assistant.query("What's the average sales across all quarters?")
-assistant.query("Add up the expenses for January and February")
-```
+## Next steps
 
-## Document Formats Supported
-
-The assistant can read the following file formats:
-- `.txt` - Plain text files
-- `.md` - Markdown files
-- `.json` - JSON files
-- `.csv` - CSV files
-
-## Session Management
-
-```python
-# Start a new session
-session_id = assistant.start_session()
-
-# Get session history
-history = assistant.get_session_history()
-
-# Save current session
-assistant.save_session()
-
-# Load previous session
-assistant.load_session("session-id-here")
-
-# List all sessions
-sessions = assistant.list_sessions()
-
-# Clear current session
-assistant.clear_session()
-```
-
-## Interactive CLI Commands
-
-When running `python main.py`:
-
-- `/load <path>` - Load documents from a path
-- `/stats` - Show assistant statistics
-- `/sessions` - List all saved sessions
-- `/clear` - Clear current session
-- `/help` - Show help message
-- `/quit` or `/exit` - Exit the assistant
-
-## Adding Documents Programmatically
-
-```python
-# Add a single document
-assistant.add_document(
-    content="This is the document content",
-    source="manual_entry.txt",
-    metadata={"author": "John Doe", "date": "2024-01-01"}
-)
-
-# Load from a directory
-assistant.load_documents("./new_documents")
-```
-
-## Checking Statistics
-
-```python
-stats = assistant.get_stats()
-print(f"Documents: {stats['num_documents']}")
-print(f"Sessions: {stats['num_sessions']}")
-print(f"Current Session: {stats['current_session_id']}")
-print(f"Messages: {stats['current_session_messages']}")
-```
-
-## Advanced Usage
-
-### Custom LLM Parameters
-
-```python
-from langchain_openai import ChatOpenAI
-
-llm = ChatOpenAI(
-    model="gpt-4-turbo-preview",
-    temperature=0.7,          # Adjust creativity
-    max_tokens=2000,          # Control response length
-    request_timeout=60        # Set timeout
-)
-
-assistant = DocumentAssistant(llm=llm)
-```
-
-### Accessing Workflow State
-
-```python
-# The workflow automatically tracks:
-# - Intent classification
-# - Tools used
-# - Actions taken
-# - Conversation summary
-# - Active documents
-
-# These are maintained in the LangGraph state
-```
-
-### Using Different Models
-
-```python
-# GPT-3.5 (faster, cheaper)
-from langchain_openai import ChatOpenAI
-llm = ChatOpenAI(model="gpt-3.5-turbo")
-
-# GPT-4 (more capable)
-llm = ChatOpenAI(model="gpt-4")
-
-# Claude 3.5 Sonnet (Anthropic)
-from langchain_anthropic import ChatAnthropic
-llm = ChatAnthropic(model="claude-3-5-sonnet-20241022")
-
-# Claude 3 Opus (most capable)
-llm = ChatAnthropic(model="claude-3-opus-20240229")
-```
-
-## Troubleshooting
-
-### Issue: "No documents found"
-**Solution:** Check that your document path is correct and contains supported file formats.
-
-```python
-import os
-print(os.path.exists("./documents"))  # Should return True
-```
-
-### Issue: "LLM not configured"
-**Solution:** Make sure you pass an LLM instance when creating the assistant.
-
-```python
-from langchain_openai import ChatOpenAI
-llm = ChatOpenAI(model="gpt-4")
-assistant = DocumentAssistant(llm=llm)  # Don't forget this!
-```
-
-### Issue: API Key errors
-**Solution:** Check your `.env` file has the correct API key.
-
-```bash
-# .env file
-OPENAI_API_KEY=sk-...
-```
-
-### Issue: Import errors
-**Solution:** Make sure all dependencies are installed.
-
-```bash
-pip install -r requirements.txt
-```
-
-## Architecture Overview
-
-The assistant uses a sophisticated LangGraph workflow:
-
-```
-User Query
-    ↓
-Classify Intent (LLM classifies as qa/summarization/calculation)
-    ↓
-Route to Agent
-    ├── Q&A Agent (answers questions)
-    ├── Summarization Agent (creates summaries)
-    └── Calculation Agent (performs calculations)
-    ↓
-Update Memory (summarize conversation, track documents)
-    ↓
-Return Response
-```
-
-### Tools Available
-
-1. **Document Reader** - Retrieves relevant documents based on queries
-2. **Calculator** - Performs mathematical calculations safely
-
-The LLM automatically decides when to use each tool based on the query.
-
-## Best Practices
-
-1. **Be Specific:** Clear questions get better answers
-   - Good: "What was the revenue in Q2 2023?"
-   - Less clear: "Tell me about money"
-
-2. **Use Natural Language:** The system understands conversational queries
-   - "Calculate the sum of January and February sales"
-   - "What's 100 + 200?" (will use calculator tool)
-
-3. **Leverage Context:** Follow-up questions work well
-   - First: "What is the revenue in Q1?"
-   - Then: "How does that compare to Q2?"
-
-4. **Save Sessions:** For important conversations
-   ```python
-   assistant.save_session()
-   ```
-
-## Example Workflow
-
-```python
-from src.assistant import DocumentAssistant
-from langchain_openai import ChatOpenAI
-
-# Setup
-llm = ChatOpenAI(model="gpt-4", temperature=0)
-assistant = DocumentAssistant(document_path="./financial_reports", llm=llm)
-assistant.load_documents()
-
-# Q&A
-response = assistant.query("What was the total revenue in Q1?")
-print(response)
-
-# Calculation
-response = assistant.query("Calculate the difference between Q1 and Q2 revenue")
-print(response)
-
-# Summarization
-response = assistant.query("Summarize the key financial metrics")
-print(response)
-
-# Save the session
-assistant.save_session()
-print(f"Session saved: {assistant.current_session.session_id}")
-```
-
-## Next Steps
-
-- Review [IMPLEMENTATION.md](IMPLEMENTATION.md) for technical details
-- See [README.md](../README.md) for project overview
-- Explore the code in `src/` directory to understand the implementation
-
-## Support
-
-For issues or questions:
-1. Check the troubleshooting section above
-2. Review the implementation documentation
-3. Examine the example code in this guide
+- [Python API](API_REFERENCE.md): session restoration, in-memory documents, and structured state.
+- [Notebook guide](../notebooks/README.md): interactive walkthrough.
+- [Testing](TESTING_GUIDE.md): local checks without provider calls.
+- [Troubleshooting](TROUBLESHOOTING.md): installation and query problems.

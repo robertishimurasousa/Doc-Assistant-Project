@@ -1,12 +1,14 @@
 # Project Rubric Checklist
 
+> Historical record: this document describes earlier implementation or course-review work. Examples, line references, and completion claims may no longer match the code. Use the [documentation index](README.md) for current guidance.
+
 This document maps the project implementation to the rubric requirements.
 
 ## Schema Implementation
 
 ### ✅ Implement structured output schemas using Pydantic
 
-**Location:** [src/schemas.py](src/schemas.py)
+**Location:** [src/schemas.py](../src/schemas.py)
 
 - **AnswerResponse Schema** (lines 62-69)
   - ✅ `question: str` - Original user question
@@ -49,8 +51,8 @@ intent = UserIntent(
 - ✅ **Intent type**: Validated by LLM structured output to be one of: qa, summarization, calculation, unknown
 
 **Evidence:**
-- [src/schemas.py:68](src/schemas.py#L68) - `confidence: float = Field(..., ge=0.0, le=1.0, ...)`
-- [src/schemas.py:76](src/schemas.py#L76) - `confidence: float = Field(..., ge=0.0, le=1.0, ...)`
+- [src/schemas.py:68](../src/schemas.py#L68) - `confidence: float = Field(..., ge=0.0, le=1.0, ...)`
+- [src/schemas.py:76](../src/schemas.py#L76) - `confidence: float = Field(..., ge=0.0, le=1.0, ...)`
 
 ---
 
@@ -58,7 +60,7 @@ intent = UserIntent(
 
 ### ✅ Create a complete LangGraph workflow
 
-**Location:** [src/agent.py:353-402](src/agent.py#L353-L402)
+**Location:** [src/agent.py:353-402](../src/agent.py#L353-L402)
 
 The `create_workflow` function implements:
 - ✅ StateGraph instantiation (line 363)
@@ -88,8 +90,8 @@ print(type(workflow))  # <class 'langgraph.graph.state.CompiledStateGraph'>
 ### ✅ Implement proper state flow and routing logic
 
 **Routing Implementation:**
-- [src/agent.py:341-350](src/agent.py#L341-L350) - `route_intent()` function
-- [src/agent.py:380-388](src/agent.py#L380-L388) - Conditional edges mapping
+- [src/agent.py:341-350](../src/agent.py#L341-L350) - `route_intent()` function
+- [src/agent.py:380-388](../src/agent.py#L380-L388) - Conditional edges mapping
 
 **State Flow:**
 1. User input → `classify_intent` (entry point)
@@ -111,7 +113,7 @@ Graph: classify_intent → [conditional routing] → agent → update_memory →
 
 ### ✅ Implement a functional calculator tool
 
-**Location:** [src/tools.py:140-195](src/tools.py#L140-L195)
+**Location:** [src/tools.py:140-195](../src/tools.py#L140-L195)
 
 The calculator tool implements:
 - ✅ `@tool` decorator (line 147)
@@ -146,7 +148,7 @@ print(result)  # "Error: Division by zero"
 
 ### ✅ Create an effective intent classification prompt
 
-**Location:** [src/prompts.py:63-85](src/prompts.py#L63-L85)
+**Location:** [src/prompts.py:63-85](../src/prompts.py#L63-L85)
 
 The `INTENT_CLASSIFICATION_PROMPT` includes:
 - ✅ Clear categories: qa, summarization, calculation, unknown
@@ -158,12 +160,12 @@ The `INTENT_CLASSIFICATION_PROMPT` includes:
 - ✅ Instructions for reasoning (line 79)
 - ✅ Conversation history context (lines 67-68)
 
-**Helper Function:** [src/prompts.py:240-263](src/prompts.py#L240-L263)
+**Helper Function:** [src/prompts.py:240-263](../src/prompts.py#L240-L263)
 - `get_intent_classification_prompt()` formats the prompt with user input and history
 
 ### ✅ Implement dynamic chat prompt selection
 
-**Location:** [src/prompts.py:266-283](src/prompts.py#L266-L283)
+**Location:** [src/prompts.py:266-283](../src/prompts.py#L266-L283)
 
 The `get_chat_prompt_template()` function:
 - ✅ Takes `intent_type` parameter
@@ -174,9 +176,9 @@ The `get_chat_prompt_template()` function:
   - default → `QA_SYSTEM_PROMPT`
 
 **Usage in Agents:**
-- [src/agent.py:127](src/agent.py#L127) - QA agent: `PromptTemplates.get_chat_prompt_template("qa")`
-- [src/agent.py:187](src/agent.py#L187) - Summarization: `PromptTemplates.get_chat_prompt_template("summarization")`
-- [src/agent.py:247](src/agent.py#L247) - Calculation: `PromptTemplates.get_chat_prompt_template("calculation")`
+- [src/agent.py:127](../src/agent.py#L127) - QA agent: `PromptTemplates.get_chat_prompt_template("qa")`
+- [src/agent.py:187](../src/agent.py#L187) - Summarization: `PromptTemplates.get_chat_prompt_template("summarization")`
+- [src/agent.py:247](../src/agent.py#L247) - Calculation: `PromptTemplates.get_chat_prompt_template("calculation")`
 
 ---
 
@@ -186,13 +188,13 @@ The `get_chat_prompt_template()` function:
 
 **End-to-End Flow:**
 
-1. **User Input Processing** - [src/assistant.py:119-201](src/assistant.py#L119-L201)
-2. **Intent Classification** - [src/agent.py:31-97](src/agent.py#L31-L97)
-3. **Agent Routing** - [src/agent.py:341-350](src/agent.py#L341-L350)
+1. **User Input Processing** - [src/assistant.py:119-201](../src/assistant.py#L119-L201)
+2. **Intent Classification** - [src/agent.py:31-97](../src/agent.py#L31-L97)
+3. **Agent Routing** - [src/agent.py:341-350](../src/agent.py#L341-L350)
 4. **Tool Usage:**
-   - Document Reader - [src/tools.py:198-251](src/tools.py#L198-L251)
-   - Calculator - [src/tools.py:140-195](src/tools.py#L140-L195)
-5. **Memory Management** - [src/agent.py:286-338](src/agent.py#L286-L338)
+   - Document Reader - [src/tools.py:198-251](../src/tools.py#L198-L251)
+   - Calculator - [src/tools.py:140-195](../src/tools.py#L140-L195)
+5. **Memory Management** - [src/agent.py:286-338](../src/agent.py#L286-L338)
 6. **Response Generation** - Returns AnswerResponse with all fields
 
 **Test Script:** [test_assistant.py](../tests/test_assistant.py)
@@ -209,12 +211,12 @@ python tests/test_assistant.py
 ### ✅ Automatically generated directories
 
 **Sessions Directory:**
-- Created by: [src/assistant.py:35](src/assistant.py#L35)
+- Created by: [src/assistant.py:35](../src/assistant.py#L35)
 - Contains: JSON files with conversation history
 - Format: `sessions/{session-id}.json`
 
 **Logs Directory:**
-- Tool logging: [src/tools.py:27](src/tools.py#L27)
+- Tool logging: [src/tools.py:27](../src/tools.py#L27)
 - Logs all tool invocations with input/output
 
 **Verification:**
@@ -261,28 +263,28 @@ ls -la sessions/    # Should show session JSON files
 | Requirement | Status | Evidence |
 |-------------|--------|----------|
 | **Schema Implementation** | | |
-| AnswerResponse schema with all fields | ✅ | [schemas.py:62-69](src/schemas.py#L62-L69) |
-| UserIntent schema with all fields | ✅ | [schemas.py:72-77](src/schemas.py#L72-L77) |
+| AnswerResponse schema with all fields | ✅ | [schemas.py:62-69](../src/schemas.py#L62-L69) |
+| UserIntent schema with all fields | ✅ | [schemas.py:72-77](../src/schemas.py#L72-L77) |
 | Type validation (confidence 0-1) | ✅ | Pydantic `ge=0.0, le=1.0` constraints |
 | **Workflow Creation** | | |
-| StateGraph instantiation | ✅ | [agent.py:363](src/agent.py#L363) |
-| All nodes added | ✅ | [agent.py:366-370](src/agent.py#L366-L370) |
-| Conditional routing | ✅ | [agent.py:380-388](src/agent.py#L380-L388) |
-| MemorySaver checkpointer | ✅ | [agent.py:399-400](src/agent.py#L399-L400) |
+| StateGraph instantiation | ✅ | [agent.py:363](../src/agent.py#L363) |
+| All nodes added | ✅ | [agent.py:366-370](../src/agent.py#L366-L370) |
+| Conditional routing | ✅ | [agent.py:380-388](../src/agent.py#L380-L388) |
+| MemorySaver checkpointer | ✅ | [agent.py:399-400](../src/agent.py#L399-L400) |
 | **Tool Implementation** | | |
-| Calculator with @tool decorator | ✅ | [tools.py:147](src/tools.py#L147) |
-| Expression validation | ✅ | [tools.py:163-166](src/tools.py#L163-L166) |
-| Error handling | ✅ | [tools.py:182-193](src/tools.py#L182-L193) |
-| Tool logging | ✅ | [tools.py:178](src/tools.py#L178) |
-| Returns string | ✅ | [tools.py:175](src/tools.py#L175) `f"Result: {result}"` |
+| Calculator with @tool decorator | ✅ | [tools.py:147](../src/tools.py#L147) |
+| Expression validation | ✅ | [tools.py:163-166](../src/tools.py#L163-L166) |
+| Error handling | ✅ | [tools.py:182-193](../src/tools.py#L182-L193) |
+| Tool logging | ✅ | [tools.py:178](../src/tools.py#L178) |
+| Returns string | ✅ | [tools.py:175](../src/tools.py#L175) `f"Result: {result}"` |
 | **Prompt Engineering** | | |
-| Intent classification prompt | ✅ | [prompts.py:63-85](src/prompts.py#L63-L85) |
-| Examples and categories | ✅ | [prompts.py:81-85](src/prompts.py#L81-L85) |
-| Dynamic prompt selection | ✅ | [prompts.py:266-283](src/prompts.py#L266-L283) |
+| Intent classification prompt | ✅ | [prompts.py:63-85](../src/prompts.py#L63-L85) |
+| Examples and categories | ✅ | [prompts.py:81-85](../src/prompts.py#L81-L85) |
+| Dynamic prompt selection | ✅ | [prompts.py:266-283](../src/prompts.py#L266-L283) |
 | **Integration** | | |
 | End-to-end functionality | ✅ | [test_assistant.py](../tests/test_assistant.py) |
 | All three intents | ✅ | Tests included |
-| Sessions directory | ✅ | Auto-created [assistant.py:35](src/assistant.py#L35) |
+| Sessions directory | ✅ | Auto-created [assistant.py:35](../src/assistant.py#L35) |
 | Logs directory | ✅ | Tool logging active |
 | Comprehensive documentation | ✅ | 5 documentation files |
 

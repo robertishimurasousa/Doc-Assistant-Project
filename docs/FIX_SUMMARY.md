@@ -1,5 +1,7 @@
 # Fix Summary: Tool Message Format Errors
 
+> Historical record: this document describes earlier implementation or course-review work. Examples, line references, and completion claims may no longer match the code. Use the [documentation index](README.md) for current guidance.
+
 ## Problem
 
 The Document Assistant was encountering OpenAI API errors when trying to use tools:

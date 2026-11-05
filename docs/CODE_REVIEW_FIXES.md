@@ -1,5 +1,7 @@
 # Code Review Fixes - Implementation Summary
 
+> Historical record: this document describes earlier implementation or course-review work. Examples, line references, and completion claims may no longer match the code. Use the [documentation index](README.md) for current guidance.
+
 ## Overview
 This document summarizes the critical fixes applied to address the project feedback regarding specialized structured outputs, conversation memory, and prompt template structure.
 
